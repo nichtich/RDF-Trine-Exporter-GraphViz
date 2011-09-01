@@ -1,0 +1,69 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use RDF::Trine::Parser;
+use RDF::Trine::Model;
+use RDF::Trine::Serializer::GraphViz;
+use Getopt::Long;
+
+my ($help, $base_uri, $format, $parser);
+GetOptions(
+    "help|?" => \$help,
+    "I=s"    => \$base_uri,
+    "png|svg|dot" => sub { $format = "".shift; },
+) or usage();
+usage() if $help;
+
+my $infile  = shift @ARGV || '-';
+my $outfile = shift @ARGV || '-';
+
+my ($in, $out) = (\*STDIN, \*STDOUT);
+
+unless ($infile eq '-') {
+#    open ($in, "<", $infile) or die "failed to open $infile";
+    $parser ||= RDF::Trine::Parser->guess_parser_by_filename( $infile );
+}
+unless ($outfile eq '-') {
+    open ($out, ">", $outfile) or die "failed to open $outfile";
+    $format ||= $1 if $outfile =~ /\.([^.]+)$/;
+}
+
+my $ser = RDF::Trine::Serializer->new( 'graphviz', as => ($format || 'dot') );
+
+my $model = RDF::Trine::Model->new;
+$base_uri ||= "file:///" . $infile;
+unless ($parser) {
+    print STDERR "please specify input format!\n";
+}
+
+$parser->parse_file_into_model ( $base_uri, $infile, $model );
+
+$ser->serialize_model_to_file( $out, $model ); 
+
+sub usage {
+    print <<USAGE;
+rdfdot [ [<RDF-FILE>] <GRAPH-FILE> ]
+
+Create dot graph diagrams from RDF data.
+
+Arguments:
+  RDF-FILE        RDF input filename with known extension (.ttl, .nt etc.),
+                  default is '-' for standard input (stdin).
+  GRAPH-FILE      Output filename with known extension (.png, .svg etc.),
+                  default is '-' for standard output (stdout).
+                   
+Options:
+  -I BASE         Input base URI (not supported yet)
+
+USAGE
+    exit;
+}
+
+=head1 NAME
+
+rdfdot - create dot graph diagrams from RDF data
+
+=cut
+
+
