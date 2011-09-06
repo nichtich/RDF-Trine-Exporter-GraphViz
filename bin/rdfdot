@@ -6,31 +6,43 @@ use warnings;
 
 use RDF::Trine::Parser;
 use RDF::Trine::Model;
-use RDF::Trine::Serializer::GraphViz;
+use RDF::Trine::Exporter::GraphViz;
+use Pod::Usage;
 use Getopt::Long;
 
-my ($help, $base_uri, $format, $parser);
+my ($help, $base_uri, $informat, $outformat, $parser);
 GetOptions(
     "help|?" => \$help,
     "I=s"    => \$base_uri,
-    "png|svg|dot" => sub { $format = "".shift; },
-) or usage();
-usage() if $help;
+    map ({ $_ => sub { $informat = shift } }
+      keys %RDF::Trine::Parser::file_extensions),
+    map { $_ => sub { $outformat = shift } }
+        keys %RDF::Trine::Exporter::GraphViz::FORMATS
+) or pod2usage();
+pod2usage() if $help;
 
 my $infile  = shift @ARGV || '-';
 my $outfile = shift @ARGV || '-';
 
 my ($in, $out) = (\*STDIN, \*STDOUT);
 
-unless ($infile eq '-') {
-#    open ($in, "<", $infile) or die "failed to open $infile";
-    $parser ||= RDF::Trine::Parser->guess_parser_by_filename( $infile );
-}
-unless ($outfile eq '-') {
-    open ($out, ">", $outfile) or die "failed to open $outfile";
-    $format ||= $1 if $outfile =~ /\.([^.]+)$/;
+if ( $informat ) {
+    $parser = $RDF::Trine::Parser::file_extensions{ $informat };
+} elsif ( $infile ne '-' ) {
+    $parser = RDF::Trine::Parser->guess_parser_by_filename( $infile );
 }
 
+if ($infile eq '-') {
+    $infile = \*STDIN;
+    binmode $infile, 'utf8';
+}
+
+if ($outfile ne '-') {
+    open ($out, ">", $outfile) or die "failed to open $outfile";
+    $outformat ||= $1 if $outfile =~ /\.([^.]+)$/;
+}
+
+# <TODO=move this into another module>
 my %namespaces;
 my %prefixes;
 foreach (<DATA>) {
@@ -38,10 +50,10 @@ foreach (<DATA>) {
     next if $prefixes{$2};
     $namespaces{$1} = $2;
     $prefixes{$2} = 1;
-};
+}; # </TODO>
 
-my $ser = RDF::Trine::Serializer->new( 'graphviz',
-    as => ($format || 'dot'),
+my $exporter = RDF::Trine::Exporter::GraphViz->new(
+    as => ($outformat || 'dot'),
     namespaces => \%namespaces,
 );
 
@@ -53,32 +65,45 @@ unless ($parser) {
 }
 
 $parser->parse_file_into_model ( $base_uri, $infile, $model );
+$exporter->serialize_model_to_file( $out, $model );
 
-$ser->serialize_model_to_file( $out, $model );
-
-sub usage {
-    print <<USAGE;
-rdfdot [ [<RDF-FILE>] <GRAPH-FILE> ]
-
-Create dot graph diagrams from RDF data.
-
-Arguments:
-  RDF-FILE        RDF input filename with known extension (.ttl, .nt etc.),
-                  default is '-' for standard input (stdin).
-  GRAPH-FILE      Output filename with known extension (.png, .svg etc.),
-                  default is '-' for standard output (stdout).
-
-Options:
-  -I BASE         Input base URI (not supported yet)
-
-USAGE
-    exit;
-}
 
 =head1 DESCRIPTION
 
-This command line client is installed with L<RDF::Trine::Serializer::GraphViz>.
-The C<-help> option will show its usage.
+This command line client is installed with L<RDF::Trine::Exporter::GraphViz>
+to create nice graph diagrams from XML data.
+
+=head1 SYNOPSIS
+
+rdfdot [ [<RDF-FILE>] <GRAPH-FILE> ]
+
+Arguments:
+
+    RDF-FILE      RDF input filename with known extension (.ttl, .nt etc.),
+                  default is '-' for standard input (stdin).
+    GRAPH-FILE    Output filename with known extension (.png, .svg etc.),
+                  default is '-' for standard output (stdout).
+
+Options:
+
+    -ttl             input is Turtle format
+    -rdf|xrdf|rdfx   input is RDF/XML
+    -js|json         input is RDF/JSON format
+    -htm|html|xhtml  input is HTML with RDFa
+    -nt              input is NTriples format
+    -nq              input is NQuads format
+    -trig            input is TriG format
+
+    -xxx             serialize in C<xxx> format (xxx=png|svg|...)
+
+    -I BASE          set base URI for input
+
+=head1 EXAMPLES
+
+    rdfdot myrdf.xml                     # output as DOT
+    rdfdot -svg data.ttl                 # ouptput as SVG
+    rdfdot myrdf.xml graph.png           # create PNG file
+    cat myrdf.nt | rdfdot -nt graph.gif  # RDF from STDIN to GIF file
 
 =cut
 
@@ -688,7 +713,6 @@ mygrid http://www.mygrid.org.uk/ontology#
 geovocab http://geovocab.org/
 rdfdata http://rdf.data-vocabulary.org/rdf.xml#
 b2rpubchem http://bio2rdf.org/ns/ns/ns/pubchem#
-kontakt http://richard.cyganiak.de/
 fabio http://purl.org/spar/fabio#
 water http://escience.rpi.edu/ontology/semanteco/2/0/water.owl#
 dbptmpl http://dbpedia.org/resource/Template:

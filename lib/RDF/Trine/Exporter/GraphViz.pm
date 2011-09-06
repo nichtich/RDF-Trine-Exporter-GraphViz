@@ -1,30 +1,34 @@
 use strict;
 use warnings;
-package RDF::Trine::Serializer::GraphViz;
+package RDF::Trine::Exporter::GraphViz;
 #ABSTRACT: Serialize RDF graphs as dot graph diagrams
 
 use RDF::Trine;
-use GraphViz;
+use GraphViz qw(2.04);
 use Scalar::Util qw(reftype);
 use Carp;
 
+# TODO: create RDF::Trine::Exporter
 use base qw(RDF::Trine::Serializer);
 
-our %formats = (
-    'png' => { mime => 'image/png', method => 'as_png' },
-    'dot' => { mime => 'text/plain', method => 'as_canon' },
-    'svg' => { mime => 'image/svg+xml', method => 'as_svg' },
-    'gif' => { mime => 'image/gif', method => 'as_gif' },
-    # ...
+our %FORMATS = (
+    dot   => 'text/plain',
+    ps    => 'application/postscript',
+    hpgl  => 'application/vnd.hp-hpgl',
+    pcl   => 'application/vnd.hp-pcl',
+    mif   => 'application/vnd.mif',
+    gif   => 'image/gif',
+    jpeg  => 'image/jpeg',
+    png   => 'image/png',
+    wbmp  => 'image/vnd.wap.wbmp',
+    cmapx => 'text/html',
+    imap  => 'application/x-httpd-imap',
+    'map' => 'application/x-httpd-imap',
+    vrml  => 'model/vrml',
+    fig   => 'image/x-xfig',
+    svg   => 'image/svg+xml',
+    svgz  => 'image/svg+xml',
 );
-
-BEGIN {
-    $RDF::Trine::Serializer::serializer_names{ 'graphviz' } = __PACKAGE__;
-#    my @media_types = ... # this could be controlled by 'import'
-#    foreach my $type (@media_types) {
-#        $RDF::Trine::Serializer::media_types{ $type } = __PACKAGE__;
-#    }
-}
 
 sub new {
     my ($class, %args) = @_;
@@ -33,9 +37,9 @@ sub new {
 
     $self->{as} ||= 'dot';
     croak 'Unknown format ' . $self->{as}
-        unless $formats{ $self->{as} };
+        unless $FORMATS{ $self->{as} };
 
-    $self->{mime} ||= $formats{ $self->{as} }->{mime};
+    $self->{mime} ||= $FORMATS{ $self->{as} };
 
     $self->{style}    ||= { rankdir => 1, concentrate => 1 };
     $self->{node}     ||= { shape => 'plaintext', color => 'gray' };
@@ -72,7 +76,10 @@ sub serialize_iterator_to_string {
 
     my $g = $self->iterator_as_graphviz($iter);
 
-    my $method = $formats{ $self->{as} }->{method};
+    my $method = 'as_' . $self->{as};
+    $method = 'as_canon' if $method eq 'as_dot';
+    $method = 'as_imap'  if $method eq 'as_map';
+
     my $data;
 
     eval {
@@ -150,15 +157,16 @@ sub iterator_as_graphviz {
 =head1 DESCRIPTION
 
 L<RDF::Trine::Model> includes a nice but somehow misplaced and non-customizable
-method C<as_graphviz>. This module puts it into a L<RDF::Trine::Serializer>
-object.  This module also includes a command line script C<rdfdot> to create
-graph diagrams from RDF data.
+method C<as_graphviz>. This module puts it into a RDF::Trine::Exporter object.
+(actually it is a subclass of L<RDF::Trine::Serializer> as long as RDF::Trine
+has no common RDF::Trine::Exporter superclass).  This module also includes a
+command line script C<rdfdot> to create graph diagrams from RDF data.
 
 =head1 SYNOPSIS
 
-  use RDF::Trine::Serializer::GraphViz;
+  use RDF::Trine::Exporter::GraphViz;
 
-  my $ser = RDF::Trine::Serializer->new( 'graphviz', as => 'dot' );
+  my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
   my $dot = $ser->serialize_model_to_string( $model );
 
 =head1 CONFIGURATION
@@ -168,7 +176,13 @@ graph diagrams from RDF data.
 =item as
 
 Specific serialization format with C<dot> as default. Supported formats include
-C<dot>, C<svg>, C<png>, and C<gif>.
+canonical DOT format (C<dot>), Graphics Interchange Format (C<gif>), JPEG File
+Interchange Format (C<jpeg>), Portable Network Graphics (C<png>), Scalable
+Vector Graphics (C<svg> and C<svgz>), server side HTML imape map (C<imap> or
+C<map>), client side HTML image map (C<cmapx>), PostScript (C<ps>), Hewlett
+Packard Graphic Language (C<hpgl>), Printer Command Language (C<pcl>), FIG
+format (C<fig>), Maker Interchange Format (C<mif>), Wireless BitMap format
+(C<wbmp>), and Virtual Reality Modeling Language (C<vrml>).
 
 =item style
 
@@ -216,9 +230,10 @@ Mime type. By default automatically set based on C<as>.
 
 =head1 METHODS
 
-This modules derives from L<RDF::Trine::Serializer> with all of its methods. In
-addition you can create raw L<GraphViz> objects. The following methods are of
-interest in particular:
+This modules derives from L<RDF::Trine::Serializer> with all of its methods (a
+future version may be derived from RDF::Trine::Exporter). In addition you can
+create raw L<GraphViz> objects. The following methods are of interest in
+particular:
 
 =head2 new ( %options )
 
@@ -226,7 +241,7 @@ Creates a new serializer with L<configuration|/CONFIGURATION> options.
 
 =head2 media_types
 
-Returns exactely one MIME Type that the serializer is configured for.
+Returns exactely one Mime Type that the exporter is configured for.
 
 =head2 iterator_as_graphviz ( $iterator )
 

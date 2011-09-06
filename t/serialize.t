@@ -12,13 +12,13 @@ $model->add_statement(
     statement( blank('x1'), iri('u:ri'), literal('データ') )
 );
 
-use RDF::Trine::Serializer::GraphViz;
+use RDF::Trine::Exporter::GraphViz;
 
-my $g = RDF::Trine::Serializer->new( 'graphviz', as => 'dot' );
+my $g = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
 
 my $dot = $g->serialize_model_to_string( $model );
 like $dot, qr/digraph/, "dot format";
 
-print $dot;
+# print $dot;
 
 done_testing;

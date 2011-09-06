@@ -1,31 +1,38 @@
 # NAME
 
-RDF::Trine::Serializer::GraphViz - Serialize RDF graphs as dot graph diagrams
+RDF::Trine::Exporter::GraphViz - Serialize RDF graphs as dot graph diagrams
 
 # VERSION
 
-version 0.002
+version 0.003
 
 # SYNOPSIS
 
-  use RDF::Trine::Serializer::GraphViz;
+  use RDF::Trine::Exporter::GraphViz;
 
-  my $ser = RDF::Trine::Serializer->new( 'graphviz', as => 'dot' );
+  my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
   my $dot = $ser->serialize_model_to_string( $model );
 
 # DESCRIPTION
 
 [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) includes a nice but somehow misplaced and non-customizable
-method `as_graphviz`. This module puts it into a [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer)
-object.  This module also includes a command line script `rdfdot` to create
-graph diagrams from RDF data.
+method `as_graphviz`. This module puts it into a RDF::Trine::Exporter object.
+(actually it is a subclass of [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) as long as RDF::Trine
+has no common RDF::Trine::Exporter superclass).  This module also includes a
+command line script `rdfdot` to create graph diagrams from RDF data.
 
 # CONFIGURATION
 
 - as
 
 Specific serialization format with `dot` as default. Supported formats include
-`dot`, `svg`, `png`, and `gif`.
+canonical DOT format (`dot`), Graphics Interchange Format (`gif`), JPEG File
+Interchange Format (`jpeg`), Portable Network Graphics (`png`), Scalable
+Vector Graphics (`svg` and `svgz`), server side HTML imape map (`imap` or
+`map`), client side HTML image map (`cmapx`), PostScript (`ps`), Hewlett
+Packard Graphic Language (`hpgl`), Printer Command Language (`pcl`), FIG
+format (`fig`), Maker Interchange Format (`mif`), Wireless BitMap format
+(`wbmp`), and Virtual Reality Modeling Language (`vrml`).
 
 - style
 
@@ -71,9 +78,10 @@ Mime type. By default automatically set based on `as`.
 
 # METHODS
 
-This modules derives from [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) with all of its methods. In
-addition you can create raw [GraphViz](http://search.cpan.org/perldoc?GraphViz) objects. The following methods are of
-interest in particular:
+This modules derives from [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) with all of its methods (a
+future version may be derived from RDF::Trine::Exporter). In addition you can
+create raw [GraphViz](http://search.cpan.org/perldoc?GraphViz) objects. The following methods are of interest in
+particular:
 
 ## new ( %options )
 
@@ -81,7 +89,7 @@ Creates a new serializer with [CONFIGURATION](#pod_CONFIGURATION) options.
 
 ## media_types
 
-Returns exactely one MIME Type that the serializer is configured for.
+Returns exactely one Mime Type that the exporter is configured for.
 
 ## iterator_as_graphviz ( $iterator )
 
