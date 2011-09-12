@@ -1,5 +1,7 @@
-use strict;
+﻿use strict;
 use warnings;
+
+# TODO fix warning: "String ran past end of line"
 
 use utf8;
 use Test::More;

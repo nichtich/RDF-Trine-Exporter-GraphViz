@@ -4,7 +4,7 @@ RDF::Trine::Exporter::GraphViz - Serialize RDF graphs as dot graph diagrams
 
 # VERSION
 
-version 0.003
+version 0.004
 
 # SYNOPSIS
 
@@ -19,9 +19,48 @@ version 0.003
 method `as_graphviz`. This module puts it into a RDF::Trine::Exporter object.
 (actually it is a subclass of [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) as long as RDF::Trine
 has no common RDF::Trine::Exporter superclass).  This module also includes a
-command line script `rdfdot` to create graph diagrams from RDF data.
+command line script [rdfdot](http://search.cpan.org/perldoc?rdfdot) to create graph diagrams from RDF data.
+
+# METHODS
+
+This modules derives from [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) with all of its methods (a
+future version may be derived from RDF::Trine::Exporter). The following methods
+are of interest in particular:
+
+## new ( %options )
+
+Creates a new serializer with [CONFIGURATION](#pod_CONFIGURATION) options
+as described below.
+
+## media_types
+
+Returns the exporter's mime type. For instance if you create an exporter with
+`as => 'svg'`, this method returns `('image/svg+xml')`.
+
+## as_graphviz ( $rdf [, %options ] )
+
+Creates and returns a [GraphViz](http://search.cpan.org/perldoc?GraphViz) object for further processing. You must
+provide RDF data as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model).
+
+## serialize_model_to_file ( $file, $model )
+
+Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file.
+
+## serialize_model_to_string ( $model )
+
+Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a string.
+
+## serialize_iterator_to_string ( $iterator, [ %options ] )
+
+Serialize a [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) as graph diagram to a string.
+
+## iterator_as_graphviz ( $iterator )
+
+This internal the core method, used by all `serialize_...` methods.
 
 # CONFIGURATION
+
+The following configuration options can be set when creating a new object.
 
 - as
 
@@ -34,10 +73,14 @@ Packard Graphic Language (`hpgl`), Printer Command Language (`pcl`), FIG
 format (`fig`), Maker Interchange Format (`mif`), Wireless BitMap format
 (`wbmp`), and Virtual Reality Modeling Language (`vrml`).
 
+- mime
+
+Mime type. By default automatically set based on `as`.
+
 - style
 
 General graph style options as hash reference. Defaults to
-`<{ rankdir =` 1, concentrate => 1 }>>.
+`{ rankdir => 1, concentrate => 1 }`.
 
 - node
 
@@ -47,7 +90,7 @@ Hash reference with general options to style nodes. Defaults to
 - resource
 
 Hash reference with options to style resource nodes. Defaults to
-`<{ shape =` 'box', style => 'rounded', fontcolor => 'blue' }>>.
+`{ shape => 'box', style => 'rounded', fontcolor => 'blue' }`.
 
 - literal
 
@@ -56,8 +99,8 @@ Hash reference with options to style literal nodes. Defaults to
 
 - blank
 
-Hash reference with options to style blank nodes. Defaults to `<{ label =` '',
-shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' }>>.
+Hash reference with options to style blank nodes. Defaults to `{ label => '',
+shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' }`.
 
 - url
 
@@ -71,42 +114,6 @@ An URI that is marked as 'root' node.
 - title
 
 Add a title to the graph.
-
-- mime
-
-Mime type. By default automatically set based on `as`.
-
-# METHODS
-
-This modules derives from [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) with all of its methods (a
-future version may be derived from RDF::Trine::Exporter). In addition you can
-create raw [GraphViz](http://search.cpan.org/perldoc?GraphViz) objects. The following methods are of interest in
-particular:
-
-## new ( %options )
-
-Creates a new serializer with [CONFIGURATION](#pod_CONFIGURATION) options.
-
-## media_types
-
-Returns exactely one Mime Type that the exporter is configured for.
-
-## iterator_as_graphviz ( $iterator )
-
-Creates a [GraphViz](http://search.cpan.org/perldoc?GraphViz) object for further processing. This is the core method,
-used by all `serialize_...` methods.
-
-## serialize_model_to_file ( $file, $model )
-
-Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file.
-
-## serialize_model_to_string ( $model )
-
-Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a string.
-
-## serialize_iterator_to_string ( $iterator, [ %options ] )
-
-Serialize a [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) as graph diagram to a string.
 
 # LIMITATIONS
 

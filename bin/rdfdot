@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+﻿#!/usr/bin/perl
 use strict;
 use warnings;
 # PODNAME: rdfdot
@@ -10,16 +10,23 @@ use RDF::Trine::Exporter::GraphViz;
 use Pod::Usage;
 use Getopt::Long;
 
-my ($help, $base_uri, $informat, $outformat, $parser);
+my $FORMATS = \%RDF::Trine::Exporter::GraphViz::FORMATS;
+
+my ($help, $base_uri, $informat, $outformat, $parser, $outlist);
 GetOptions(
     "help|?" => \$help,
     "I=s"    => \$base_uri,
+    "output" => \$outlist,
     map ({ $_ => sub { $informat = shift } }
       keys %RDF::Trine::Parser::file_extensions),
-    map { $_ => sub { $outformat = shift } }
-        keys %RDF::Trine::Exporter::GraphViz::FORMATS
+    map { $_ => sub { $outformat = shift } } keys %$FORMATS
 ) or pod2usage();
 pod2usage() if $help;
+
+if ($outlist) {
+    print "$_\t" . $FORMATS->{$_} . "\n" for (sort keys %$FORMATS);
+    exit;
+}
 
 my $infile  = shift @ARGV || '-';
 my $outfile = shift @ARGV || '-';
@@ -71,18 +78,18 @@ $exporter->serialize_model_to_file( $out, $model );
 =head1 DESCRIPTION
 
 This command line client is installed with L<RDF::Trine::Exporter::GraphViz>
-to create nice graph diagrams from XML data.
+to create nice graph diagrams from RDF data.
 
 =head1 SYNOPSIS
 
-rdfdot [ [<RDF-FILE>] <GRAPH-FILE> ]
+rdfdot [ <OPTIONS> ] [ [ <RDF> ] <GRAPH> ]
 
 Arguments:
 
-    RDF-FILE      RDF input filename with known extension (.ttl, .nt etc.),
-                  default is '-' for standard input (stdin).
-    GRAPH-FILE    Output filename with known extension (.png, .svg etc.),
-                  default is '-' for standard output (stdout).
+    RDF      RDF input filename with known extension (.ttl, .nt etc.),
+             default is '-' for standard input.
+    GRAPH    Graph output filename with known extension (.png, .svg etc.),
+             default is '-' for standard output.
 
 Options:
 
@@ -94,7 +101,10 @@ Options:
     -nq              input is NQuads format
     -trig            input is TriG format
 
-    -xxx             serialize in C<xxx> format (xxx=png|svg|...)
+    -png             output is PNG format
+    -svg             output is SVG format
+    -...             output is ... format (see -output)
+    -output          list all output formats and their mime type
 
     -I BASE          set base URI for input
 

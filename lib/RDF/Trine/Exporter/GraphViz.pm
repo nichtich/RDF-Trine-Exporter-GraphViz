@@ -1,11 +1,11 @@
-use strict;
+﻿use strict;
 use warnings;
 package RDF::Trine::Exporter::GraphViz;
 #ABSTRACT: Serialize RDF graphs as dot graph diagrams
 
 use RDF::Trine;
 use GraphViz qw(2.04);
-use Scalar::Util qw(reftype);
+use Scalar::Util qw(reftype blessed);
 use Carp;
 
 # TODO: create RDF::Trine::Exporter
@@ -61,22 +61,24 @@ sub media_types {
     return ($self->{mime});
 }
 
+# TODO: move to RDF::Trine::Exporter
 sub serialize_model_to_string {
-    my ($self, $model) = @_;
-    return $self->serialize_iterator_to_string( $model->as_stream );
+    my $self  = shift;
+    my $model = shift;
+    return $self->serialize_iterator_to_string( $model->as_stream, @_ );
 }
-
 sub serialize_model_to_file {
-    my ($self, $file, $model) = @_;
-    print {$file} $self->serialize_model_to_string( $model );
+    my $self = shift;
+	my $file = shift;
+    print {$file} $self->serialize_model_to_string( @_ );
 }
 
 sub serialize_iterator_to_string {
-    my ($self, $iter) = @_;
+    my ($self, $iter, %options) = @_;
 
-    my $g = $self->iterator_as_graphviz($iter);
+    my $g = $self->iterator_as_graphviz($iter, %options);
 
-    my $method = 'as_' . $self->{as};
+    my $method = 'as_' . ($self->{as} || $options{as});
     $method = 'as_canon' if $method eq 'as_dot';
     $method = 'as_imap'  if $method eq 'as_map';
 
@@ -88,6 +90,16 @@ sub serialize_iterator_to_string {
     };
 
     return $data;
+}
+
+# sub to_string
+# sub to_file (with guessing 'as' from filename)
+
+sub as_graphviz {
+	my ($self, $rdf, %options) = @_;
+	return unless blessed $rdf;
+	$rdf = $rdf->as_stream if $self->isa('RDF::Trine::Model');
+	return $self->iterator_as_graphviz( $rdf, %options );
 }
 
 sub iterator_as_graphviz {
@@ -160,7 +172,7 @@ L<RDF::Trine::Model> includes a nice but somehow misplaced and non-customizable
 method C<as_graphviz>. This module puts it into a RDF::Trine::Exporter object.
 (actually it is a subclass of L<RDF::Trine::Serializer> as long as RDF::Trine
 has no common RDF::Trine::Exporter superclass).  This module also includes a
-command line script C<rdfdot> to create graph diagrams from RDF data.
+command line script L<rdfdot> to create graph diagrams from RDF data.
 
 =head1 SYNOPSIS
 
@@ -169,7 +181,46 @@ command line script C<rdfdot> to create graph diagrams from RDF data.
   my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
   my $dot = $ser->serialize_model_to_string( $model );
 
+=head1 METHODS
+
+This modules derives from L<RDF::Trine::Serializer> with all of its methods (a
+future version may be derived from RDF::Trine::Exporter). The following methods
+are of interest in particular:
+
+=head2 new ( %options )
+
+Creates a new serializer with L<configuration|/CONFIGURATION> options
+as described below.
+
+=head2 media_types
+
+Returns the exporter's mime type. For instance if you create an exporter with
+C<< as => 'svg' >>, this method returns C<< ('image/svg+xml') >>.
+
+=head2 as_graphviz ( $rdf [, %options ] )
+
+Creates and returns a L<GraphViz> object for further processing. You must
+provide RDF data as L<RDF::Trine::Iterator> or as L<RDF::Trine::Model>.
+
+=head2 serialize_model_to_file ( $file, $model )
+
+Serialize a L<RDF::Trine::Model> as graph diagram to a file.
+
+=head2 serialize_model_to_string ( $model )
+
+Serialize a L<RDF::Trine::Model> as graph diagram to a string.
+
+=head2 serialize_iterator_to_string ( $iterator, [ %options ] )
+
+Serialize a L<RDF::Trine::Iterator> as graph diagram to a string.
+
+=head2 iterator_as_graphviz ( $iterator )
+
+This internal the core method, used by all C<serialize_...> methods.
+
 =head1 CONFIGURATION
+
+The following configuration options can be set when creating a new object.
 
 =over 4
 
@@ -184,10 +235,14 @@ Packard Graphic Language (C<hpgl>), Printer Command Language (C<pcl>), FIG
 format (C<fig>), Maker Interchange Format (C<mif>), Wireless BitMap format
 (C<wbmp>), and Virtual Reality Modeling Language (C<vrml>).
 
+=item mime
+
+Mime type. By default automatically set based on C<as>.
+
 =item style
 
 General graph style options as hash reference. Defaults to
-C<<{ rankdir => 1, concentrate => 1 }>>.
+C<< { rankdir => 1, concentrate => 1 } >>.
 
 =item node
 
@@ -197,7 +252,7 @@ C<< { shape => 'plaintext', color => 'gray' } >>.
 =item resource
 
 Hash reference with options to style resource nodes. Defaults to
-C<<{ shape => 'box', style => 'rounded', fontcolor => 'blue' }>>.
+C<< { shape => 'box', style => 'rounded', fontcolor => 'blue' } >>.
 
 =item literal
 
@@ -206,8 +261,8 @@ C<< { shape => 'box' } >>.
 
 =item blank
 
-Hash reference with options to style blank nodes. Defaults to C<<{ label => '',
-shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' }>>.
+Hash reference with options to style blank nodes. Defaults to C<< { label => '',
+shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' } >>.
 
 =item url
 
@@ -222,43 +277,8 @@ An URI that is marked as 'root' node.
 
 Add a title to the graph.
 
-=item mime
-
-Mime type. By default automatically set based on C<as>.
-
 =back
 
-=head1 METHODS
-
-This modules derives from L<RDF::Trine::Serializer> with all of its methods (a
-future version may be derived from RDF::Trine::Exporter). In addition you can
-create raw L<GraphViz> objects. The following methods are of interest in
-particular:
-
-=head2 new ( %options )
-
-Creates a new serializer with L<configuration|/CONFIGURATION> options.
-
-=head2 media_types
-
-Returns exactely one Mime Type that the exporter is configured for.
-
-=head2 iterator_as_graphviz ( $iterator )
-
-Creates a L<GraphViz> object for further processing. This is the core method,
-used by all C<serialize_...> methods.
-
-=head2 serialize_model_to_file ( $file, $model )
-
-Serialize a L<RDF::Trine::Model> as graph diagram to a file.
-
-=head2 serialize_model_to_string ( $model )
-
-Serialize a L<RDF::Trine::Model> as graph diagram to a string.
-
-=head2 serialize_iterator_to_string ( $iterator, [ %options ] )
-
-Serialize a L<RDF::Trine::Iterator> as graph diagram to a string.
 
 =head1 LIMITATIONS
 
