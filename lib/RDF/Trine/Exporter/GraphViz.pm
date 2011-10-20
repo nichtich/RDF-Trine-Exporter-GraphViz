@@ -48,8 +48,9 @@ sub new {
     $self->{literal}  ||= { shape => 'box' };
     $self->{blank}    ||= { label => '', shape => 'point',
         fillcolor => 'white', color => 'gray', width => '0.3' };
-	$self->{variable} ||= { fontcolor => 'darkslategray' };
-	$self->{prevar}   ||= '?';
+    $self->{variable} ||= { fontcolor => 'darkslategray' };
+    $self->{prevar}   ||= '?';
+    $self->{alias}    ||= { };
 
     if ( $self->{url} and (reftype($self->{url})||'') ne 'CODE' ) {
         $self->{url} = sub { shift->uri };
@@ -63,16 +64,32 @@ sub media_types {
     return ($self->{mime});
 }
 
-# TODO: move to RDF::Trine::Exporter
+# The following two methods may better be moved to RDF::Trine::Exporter.
 sub serialize_model_to_string {
     my $self  = shift;
     my $model = shift;
     return $self->serialize_iterator_to_string( $model->as_stream, @_ );
 }
+
 sub serialize_model_to_file {
     my $self = shift;
-	my $file = shift;
+    my $file = shift;
+    if (defined $file and !ref $file) {
+        open (my $fh, '>', $file);
+        $file = $fh;
+    }
     print {$file} $self->serialize_model_to_string( @_ );
+}
+
+sub to_file {
+    my $self = shift;
+    my $file = shift;
+    if (defined $file and !ref $file and
+        $file =~ /\.([^.]+)$/ and $FORMATS{$1} ) {
+        $self->serialize_model_to_file( $file, @_, as => $1 );
+    } else {
+        $self->serialize_model_to_file( $file, @_ );
+    }
 }
 
 sub serialize_iterator_to_string {
@@ -80,12 +97,14 @@ sub serialize_iterator_to_string {
 
     my $g = $self->iterator_as_graphviz($iter, %options);
 
-    my $method = 'as_' . ($self->{as} || $options{as});
+    my $format = ($options{as} || $self->{as});
+    die "Unknown serialization format $format" unless $FORMATS{$format};
+
+    my $method = "as_$format"; 
     $method = 'as_canon' if $method eq 'as_dot';
     $method = 'as_imap'  if $method eq 'as_map';
 
     my $data;
-
     eval {
         # TODO: Catch error message sent to STDOUT by dot if this fails.
         $g->$method( \$data );
@@ -98,10 +117,10 @@ sub serialize_iterator_to_string {
 # sub to_file (with guessing 'as' from filename)
 
 sub as_graphviz {
-	my ($self, $rdf, %options) = @_;
-	return unless blessed $rdf;
-	$rdf = $rdf->as_stream if $self->isa('RDF::Trine::Model');
-	return $self->iterator_as_graphviz( $rdf, %options );
+   my ($self, $rdf, %options) = @_;
+   return unless blessed $rdf;
+   $rdf = $rdf->as_stream if $self->isa('RDF::Trine::Model');
+   return $self->iterator_as_graphviz( $rdf, %options );
 }
 
 sub iterator_as_graphviz {
@@ -112,7 +131,8 @@ sub iterator_as_graphviz {
 
     $options{namespaces} ||= $self->{namespaces} || { };
     $options{root}       ||= $self->{root};
-	$options{prevar}     ||= $self->{prevar};
+    $options{prevar}     ||= $self->{prevar};
+    $options{alias}      ||= $self->{alias};
 
     # Basic options. Should be more configurable.
     my %gopt = %{$self->{style}};
@@ -158,9 +178,12 @@ sub iterator_as_graphviz {
             }
         }
 
-        my ($local, $qname) = $t->predicate->qname;
-        my $prefix = $nsprefix{$local};
-        my $label = $prefix ? "$prefix:$qname" : $t->predicate->as_string;
+        my $label = $options{alias}->{ $t->predicate->uri };
+        if (!defined $label) {
+            my ($local, $qname) = $t->predicate->qname;
+            my $prefix = $nsprefix{$local};
+            $label = $prefix ? "$prefix:$qname" : $t->predicate->as_string;
+        }
         $g->add_edge( @nodes, label => $label );
     }
 
@@ -185,6 +208,24 @@ L<rdfdot> to create graph diagrams from RDF data.
   my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
   my $dot = $ser->serialize_model_to_string( $model );
 
+  $ser->to_file( 'graph.svg', $model );
+
+  # highly configurable
+  my $g = RDF::Trine::Exporter::GraphViz->new( 
+      namespaces => { 
+          foaf => 'http://xmlns.com/foaf/0.1/'
+      },
+      alias => { 
+          'http://www.w3.org/2002/07/owl#sameAs' => '=',
+      },
+      prevar => '$',  # variables as '$x' instead of '?x'
+      url    => 1,    # hyperlink all URIs
+
+	  # see below for more configuration options
+  );
+  $g->to_file( 'test.svg', $model );
+
+
 =head1 METHODS
 
 This modules derives from L<RDF::Trine::Serializer> with all of its methods (a
@@ -206,15 +247,22 @@ C<< as => 'svg' >>, this method returns C<< ('image/svg+xml') >>.
 Creates and returns a L<GraphViz> object for further processing. You must
 provide RDF data as L<RDF::Trine::Iterator> or as L<RDF::Trine::Model>.
 
-=head2 serialize_model_to_file ( $file, $model )
+=head2 to_file ( $file, $rdf [, %options ] )
 
-Serialize a L<RDF::Trine::Model> as graph diagram to a file.
+Serialize RDF data, provided as L<RDF::Trine::Iterator> or as
+L<RDF::Trine::Model> to a file. C<$file> can be a filehandle or file name.
+The serialization format is automatically derived from known file extensions.
 
-=head2 serialize_model_to_string ( $model )
+=head2 serialize_model_to_file ( $file, $model [, %options ] )
+
+Serialize a L<RDF::Trine::Model> as graph diagram to a file, 
+where C<$file> can be a filename or a filehandle.
+
+=head2 serialize_model_to_string ( $model [, %options ] )
 
 Serialize a L<RDF::Trine::Model> as graph diagram to a string.
 
-=head2 serialize_iterator_to_string ( $iterator, [ %options ] )
+=head2 serialize_iterator_to_string ( $iterator [, %options ] )
 
 Serialize a L<RDF::Trine::Iterator> as graph diagram to a string.
 
@@ -270,8 +318,12 @@ shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' } >>.
 
 =item url
 
-Add URLs to nodes. You can either provide a boolean value or a code reference
-that returns an URL when given a L<RDF::Trine::Node::Resource>.
+Add clickable URLs to nodes You can either provide a boolean value or a code 
+reference that returns an URL when given a L<RDF::Trine::Node::Resource>.
+
+=item alias
+
+Hash reference with URL aliases to show as resource and predicate labels.
 
 =item variable
 
@@ -281,7 +333,8 @@ fontcolor => 'darkslategray' } >>.
 =item prevar
 
 Which character to prepend to variable names. Defaults to '?'. You can
-also set it to '$'.
+also set it to '$'. By now the setting does not affect variables
+in Notation3 formulas.
 
 =item root
 

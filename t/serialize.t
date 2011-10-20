@@ -24,17 +24,9 @@ like $dot, qr/digraph/, "dot format";
 #$model = RDF::Trine::Model->new;
 #$model->add_statement(
 #    statement( blank('x1'), iri('u:ri'), variable('foo') )
-#);
-#$model->add_statement(
-#    statement( blank('x1'), iri('u:rv'), iri('bar:z') )
-#);	
-#$model->add_statement(
-#    statement( iri('bar:z'), iri('x:y'), literal('bla') )
 #);	
 #$dot = $g->serialize_model_to_string( $model );
-#$g = RDF::Trine::Exporter::GraphViz->new( as => 'png' );
-#open(my $fh, '>', 'test.png');
-#$dot = $g->serialize_model_to_file( $fh, $model );
-#print $dot;
+# $g = RDF::Trine::Exporter::GraphViz->new;
+#$g->to_file( 'test.svg', $model );
 
 done_testing;

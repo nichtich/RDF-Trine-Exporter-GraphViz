@@ -4,7 +4,7 @@ RDF::Trine::Exporter::GraphViz - Serialize RDF graphs as dot graph diagrams
 
 # VERSION
 
-version 0.004
+version 0.103
 
 # SYNOPSIS
 
@@ -13,13 +13,31 @@ version 0.004
   my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
   my $dot = $ser->serialize_model_to_string( $model );
 
+  $ser->to_file( 'graph.svg', $model );
+
+  # highly configurable
+  my $g = RDF::Trine::Exporter::GraphViz->new( 
+      namespaces => { 
+          foaf => 'http://xmlns.com/foaf/0.1/'
+      },
+      alias => { 
+          'http://www.w3.org/2002/07/owl#sameAs' => '=',
+      },
+      prevar => '$',  # variables as '$x' instead of '?x'
+      url    => 1,    # hyperlink all URIs
+
+	  # see below for more configuration options
+  );
+  $g->to_file( 'test.svg', $model );
+
 # DESCRIPTION
 
 [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) includes a nice but somehow misplaced and non-customizable
-method `as_graphviz`. This module puts it into a RDF::Trine::Exporter object.
-(actually it is a subclass of [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) as long as RDF::Trine
-has no common RDF::Trine::Exporter superclass).  This module also includes a
-command line script [rdfdot](http://search.cpan.org/perldoc?rdfdot) to create graph diagrams from RDF data.
+method `as_graphviz`. This module implements an extended version, put in a
+extends this method in a RDF::Trine::Exporter object.  (actually it is a
+subclass of [RDF::Trine::Serializer](http://search.cpan.org/perldoc?RDF::Trine::Serializer) as long as RDF::Trine has no common class
+RDF::Trine::Exporter).  This module also includes a command line script
+[rdfdot](http://search.cpan.org/perldoc?rdfdot) to create graph diagrams from RDF data.
 
 # METHODS
 
@@ -42,15 +60,22 @@ Returns the exporter's mime type. For instance if you create an exporter with
 Creates and returns a [GraphViz](http://search.cpan.org/perldoc?GraphViz) object for further processing. You must
 provide RDF data as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model).
 
-## serialize_model_to_file ( $file, $model )
+## to_file ( $file, $rdf [, %options ] )
 
-Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file.
+Serialize RDF data, provided as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as
+[RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) to a file. `$file` can be a filehandle or file name.
+The serialization format is automatically derived from known file extensions.
 
-## serialize_model_to_string ( $model )
+## serialize_model_to_file ( $file, $model [, %options ] )
+
+Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file, 
+where `$file` can be a filename or a filehandle.
+
+## serialize_model_to_string ( $model [, %options ] )
 
 Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a string.
 
-## serialize_iterator_to_string ( $iterator, [ %options ] )
+## serialize_iterator_to_string ( $iterator [, %options ] )
 
 Serialize a [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) as graph diagram to a string.
 
@@ -104,8 +129,23 @@ shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' }`.
 
 - url
 
-Add URLs to nodes. You can either provide a boolean value or a code reference
-that returns an URL when given a [RDF::Trine::Node::Resource](http://search.cpan.org/perldoc?RDF::Trine::Node::Resource).
+Add clickable URLs to nodes You can either provide a boolean value or a code 
+reference that returns an URL when given a [RDF::Trine::Node::Resource](http://search.cpan.org/perldoc?RDF::Trine::Node::Resource).
+
+- alias
+
+Hash reference with URL aliases to show as resource and predicate labels.
+
+- variable
+
+Hash reference with options to style variable nodes. Defaults to `{
+fontcolor => 'darkslategray' }`.
+
+- prevar
+
+Which character to prepend to variable names. Defaults to '?'. You can
+also set it to '$'. By now the setting does not affect variables
+in Notation3 formulas.
 
 - root
 
@@ -118,10 +158,9 @@ Add a title to the graph.
 # LIMITATIONS
 
 This serializer does not support `negotiate` on purpose. It may optionally be
-enabled in a future version. GraphViz may fail on large graphs and its error
-message is not catched yet. By now, only simple statement graphs are supported.
-Serialization of [RDF::Trine::Node::Variable](http://search.cpan.org/perldoc?RDF::Trine::Node::Variable) may be added later. Configuration
-in general is not fully tested yet.
+enabled in a future version. GraphViz may fail on large graphs, its error
+message is not catched yet.  Configuration in general is not fully covered by
+unit tests. Identifiers of blank nodes are not included.
 
 # AUTHOR
 
