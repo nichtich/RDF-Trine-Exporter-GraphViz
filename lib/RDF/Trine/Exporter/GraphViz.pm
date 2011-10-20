@@ -8,7 +8,7 @@ use GraphViz qw(2.04);
 use Scalar::Util qw(reftype blessed);
 use Carp;
 
-# TODO: create RDF::Trine::Exporter
+# TODO: create RDF::Trine::Exporter as base class
 use base qw(RDF::Trine::Serializer);
 
 our %FORMATS = (
@@ -46,8 +46,10 @@ sub new {
     $self->{resource} ||= { shape => 'box', style => 'rounded',
         fontcolor => 'blue' };
     $self->{literal}  ||= { shape => 'box' };
-    $self->{blank}    ||=  { label => '', shape => 'point',
+    $self->{blank}    ||= { label => '', shape => 'point',
         fillcolor => 'white', color => 'gray', width => '0.3' };
+	$self->{variable} ||= { fontcolor => 'darkslategray' };
+	$self->{prevar}   ||= '?';
 
     if ( $self->{url} and (reftype($self->{url})||'') ne 'CODE' ) {
         $self->{url} = sub { shift->uri };
@@ -106,16 +108,17 @@ sub iterator_as_graphviz {
     my ($self, $iter, %options) = @_;
 
     # We could make use of named graphs in a later version...
-    $options{title} ||= $self->{title};
+    $options{title}      ||= $self->{title};
 
     $options{namespaces} ||= $self->{namespaces} || { };
     $options{root}       ||= $self->{root};
+	$options{prevar}     ||= $self->{prevar};
 
     # Basic options. Should be more configurable.
     my %gopt = %{$self->{style}};
     $gopt{node} ||= $self->{node};
 
-    my %root_style  = ( color => 'red' );
+    my %root_style = ( color => 'red' );
 
     $gopt{name} = $options{title} if defined $options{title};
     my $g = GraphViz->new( %gopt );
@@ -134,7 +137,7 @@ sub iterator_as_graphviz {
             } elsif( $n->is_blank ) {
                 $label = $n->as_string;
             } elsif( $n->is_variable ) {
-                # TODO
+                $label = $options{prevar}.$n->name;
             }
             push(@nodes, $label);
             next if ($seen{ $label }++);
@@ -151,7 +154,7 @@ sub iterator_as_graphviz {
             } elsif ( $n->is_blank ) {
                 $g->add_node( $label, %{$self->{blank}} );
             } elsif ( $n->is_variable ) {
-                # TODO
+                $g->add_node( $label, %{$self->{variable}} );
             }
         }
 
@@ -169,10 +172,11 @@ sub iterator_as_graphviz {
 =head1 DESCRIPTION
 
 L<RDF::Trine::Model> includes a nice but somehow misplaced and non-customizable
-method C<as_graphviz>. This module puts it into a RDF::Trine::Exporter object.
-(actually it is a subclass of L<RDF::Trine::Serializer> as long as RDF::Trine
-has no common RDF::Trine::Exporter superclass).  This module also includes a
-command line script L<rdfdot> to create graph diagrams from RDF data.
+method C<as_graphviz>. This module implements an extended version, put in a
+extends this method in a RDF::Trine::Exporter object.  (actually it is a
+subclass of L<RDF::Trine::Serializer> as long as RDF::Trine has no common class
+RDF::Trine::Exporter).  This module also includes a command line script
+L<rdfdot> to create graph diagrams from RDF data.
 
 =head1 SYNOPSIS
 
@@ -269,6 +273,16 @@ shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' } >>.
 Add URLs to nodes. You can either provide a boolean value or a code reference
 that returns an URL when given a L<RDF::Trine::Node::Resource>.
 
+=item variable
+
+Hash reference with options to style variable nodes. Defaults to C<< {
+fontcolor => 'darkslategray' } >>.
+
+=item prevar
+
+Which character to prepend to variable names. Defaults to '?'. You can
+also set it to '$'.
+
 =item root
 
 An URI that is marked as 'root' node.
@@ -279,13 +293,11 @@ Add a title to the graph.
 
 =back
 
-
 =head1 LIMITATIONS
 
 This serializer does not support C<negotiate> on purpose. It may optionally be
-enabled in a future version. GraphViz may fail on large graphs and its error
-message is not catched yet. By now, only simple statement graphs are supported.
-Serialization of L<RDF::Trine::Node::Variable> may be added later. Configuration
-in general is not fully tested yet.
+enabled in a future version. GraphViz may fail on large graphs, its error
+message is not catched yet.  Configuration in general is not fully covered by
+unit tests. Identifiers of blank nodes are not included.
 
 =cut
