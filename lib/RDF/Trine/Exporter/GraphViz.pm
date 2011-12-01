@@ -144,6 +144,16 @@ sub iterator_as_graphviz {
     my $g = GraphViz->new( %gopt );
     my %nsprefix = reverse %{$options{namespaces}};
 
+	my $get_label = sub {
+		my $resource = shift;
+		my $label = $options{alias}->{ $resource->uri };
+		if (!defined $label) {
+			my ($local, $qname) = eval { $resource->qname };
+			my $prefix = $nsprefix{$local} if $local;
+			$label = $prefix ? "$prefix:$qname" : $resource->as_string;
+		}
+	};
+
     my %seen;
     while (my $t = $iter->next) {
         my @nodes;
@@ -153,8 +163,8 @@ sub iterator_as_graphviz {
             if ($n->is_literal) {
                 $label = $n->literal_value;
             } elsif( $n->is_resource ) {
-                $label = $n->uri;
-            } elsif( $n->is_blank ) {
+                $label = $get_label->($n);
+             } elsif( $n->is_blank ) {
                 $label = $n->as_string;
             } elsif( $n->is_variable ) {
                 $label = $options{prevar}.$n->name;
@@ -178,12 +188,7 @@ sub iterator_as_graphviz {
             }
         }
 
-        my $label = $options{alias}->{ $t->predicate->uri };
-        if (!defined $label) {
-            my ($local, $qname) = $t->predicate->qname;
-            my $prefix = $nsprefix{$local};
-            $label = $prefix ? "$prefix:$qname" : $t->predicate->as_string;
-        }
+        my $label = $get_label->( $t->predicate );
         $g->add_edge( @nodes, label => $label );
     }
 

@@ -6,6 +6,7 @@ use RDF::Trine::Exporter::GraphViz;
 
 eval { require RDF::TriN3; } or do {
     diag("RDF::TrinN3 not found, skipping tests");
+	ok(1);
 	exit;
 };
 
@@ -18,5 +19,7 @@ my $parser = RDF::Trine::Parser::Notation3->new;
 $parser->parse_into_model('http://example.com/', $rdf, $model);
 
 #my $log = 'http://www.w3.org/2000/10/swap/log#';
+
+ok(1);
 
 done_testing;

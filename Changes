@@ -1,5 +1,8 @@
 # Change file for RDF::Trine::Exporter::GraphViz
 
+0.12 2011-12-01
+    Abbreviate resources also if subject or object in a triple
+
 0.103 2011-10-21
     Support RDF variables, more configuration, and ->to_file
 

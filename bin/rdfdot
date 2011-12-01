@@ -67,7 +67,7 @@ my $exporter = RDF::Trine::Exporter::GraphViz->new(
 my $model = RDF::Trine::Model->new;
 $base_uri ||= "file:///" . $infile;
 unless ($parser) {
-    print STDERR "please specify input format!\n";
+    print STDERR "please specify input format or -h for help!\n";
     exit;
 }
 

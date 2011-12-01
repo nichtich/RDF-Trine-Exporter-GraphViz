@@ -4,7 +4,7 @@ RDF::Trine::Exporter::GraphViz - Serialize RDF graphs as dot graph diagrams
 
 # VERSION
 
-version 0.103
+version 0.12
 
 # SYNOPSIS
 
