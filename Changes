@@ -1,5 +1,8 @@
 # Change file for RDF::Trine::Exporter::GraphViz
 
+0.13 2012-01-23
+    Moved list of namespace prefixes to RDF::NS
+
 0.12 2011-12-01
     Abbreviate resources also if subject or object in a triple
 

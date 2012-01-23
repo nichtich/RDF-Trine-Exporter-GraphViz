@@ -4,7 +4,7 @@ RDF::Trine::Exporter::GraphViz - Serialize RDF graphs as dot graph diagrams
 
 # VERSION
 
-version 0.12
+version 0.13
 
 # SYNOPSIS
 
@@ -168,7 +168,7 @@ Jakob Voß <voss@gbv.de>
 
 # COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Jakob Voß.
+This software is copyright (c) 2012 by Jakob Voß.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
