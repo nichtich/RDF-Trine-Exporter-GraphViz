@@ -16,17 +16,17 @@ version 0.13
   $ser->to_file( 'graph.svg', $model );
 
   # highly configurable
-  my $g = RDF::Trine::Exporter::GraphViz->new( 
-      namespaces => { 
+  my $g = RDF::Trine::Exporter::GraphViz->new(
+      namespaces => {
           foaf => 'http://xmlns.com/foaf/0.1/'
       },
-      alias => { 
+      alias => {
           'http://www.w3.org/2002/07/owl#sameAs' => '=',
       },
       prevar => '$',  # variables as '$x' instead of '?x'
       url    => 1,    # hyperlink all URIs
 
-	  # see below for more configuration options
+      # see below for more configuration options
   );
   $g->to_file( 'test.svg', $model );
 
@@ -68,7 +68,7 @@ The serialization format is automatically derived from known file extensions.
 
 ## serialize_model_to_file ( $file, $model [, %options ] )
 
-Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file, 
+Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file,
 where `$file` can be a filename or a filehandle.
 
 ## serialize_model_to_string ( $model [, %options ] )
@@ -129,7 +129,7 @@ shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' }`.
 
 - url
 
-Add clickable URLs to nodes You can either provide a boolean value or a code 
+Add clickable URLs to nodes You can either provide a boolean value or a code
 reference that returns an URL when given a [RDF::Trine::Node::Resource](http://search.cpan.org/perldoc?RDF::Trine::Node::Resource).
 
 - alias

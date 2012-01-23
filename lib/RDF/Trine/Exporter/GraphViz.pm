@@ -100,7 +100,7 @@ sub serialize_iterator_to_string {
     my $format = ($options{as} || $self->{as});
     die "Unknown serialization format $format" unless $FORMATS{$format};
 
-    my $method = "as_$format"; 
+    my $method = "as_$format";
     $method = 'as_canon' if $method eq 'as_dot';
     $method = 'as_imap'  if $method eq 'as_map';
 
@@ -144,15 +144,15 @@ sub iterator_as_graphviz {
     my $g = GraphViz->new( %gopt );
     my %nsprefix = reverse %{$options{namespaces}};
 
-	my $get_label = sub {
-		my $resource = shift;
-		my $label = $options{alias}->{ $resource->uri };
-		if (!defined $label) {
-			my ($local, $qname) = eval { $resource->qname };
-			my $prefix = $nsprefix{$local} if $local;
-			$label = $prefix ? "$prefix:$qname" : $resource->as_string;
-		}
-	};
+    my $get_label = sub {
+        my $resource = shift;
+        my $label = $options{alias}->{ $resource->uri };
+        if (!defined $label) {
+            my ($local, $qname) = eval { $resource->qname };
+            my $prefix = $local ? $nsprefix{$local} : "";
+            $label = $prefix ? "$prefix:$qname" : $resource->as_string;
+        }
+    };
 
     my %seen;
     while (my $t = $iter->next) {
@@ -216,17 +216,17 @@ L<rdfdot> to create graph diagrams from RDF data.
   $ser->to_file( 'graph.svg', $model );
 
   # highly configurable
-  my $g = RDF::Trine::Exporter::GraphViz->new( 
-      namespaces => { 
+  my $g = RDF::Trine::Exporter::GraphViz->new(
+      namespaces => {
           foaf => 'http://xmlns.com/foaf/0.1/'
       },
-      alias => { 
+      alias => {
           'http://www.w3.org/2002/07/owl#sameAs' => '=',
       },
       prevar => '$',  # variables as '$x' instead of '?x'
       url    => 1,    # hyperlink all URIs
 
-	  # see below for more configuration options
+      # see below for more configuration options
   );
   $g->to_file( 'test.svg', $model );
 
@@ -260,7 +260,7 @@ The serialization format is automatically derived from known file extensions.
 
 =head2 serialize_model_to_file ( $file, $model [, %options ] )
 
-Serialize a L<RDF::Trine::Model> as graph diagram to a file, 
+Serialize a L<RDF::Trine::Model> as graph diagram to a file,
 where C<$file> can be a filename or a filehandle.
 
 =head2 serialize_model_to_string ( $model [, %options ] )
@@ -323,7 +323,7 @@ shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' } >>.
 
 =item url
 
-Add clickable URLs to nodes You can either provide a boolean value or a code 
+Add clickable URLs to nodes You can either provide a boolean value or a code
 reference that returns an URL when given a L<RDF::Trine::Node::Resource>.
 
 =item alias

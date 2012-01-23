@@ -42,7 +42,7 @@ if ( $informat ) {
 
 if ($infile eq '-') {
     $infile = \*STDIN;
-    binmode $infile, 'utf8';
+    binmode $infile, ':encoding(UTF-8)';
 }
 
 if ($outfile ne '-') {

@@ -6,8 +6,8 @@ use RDF::Trine::Exporter::GraphViz;
 
 eval { require RDF::TriN3; } or do {
     diag("RDF::TrinN3 not found, skipping tests");
-	ok(1);
-	exit;
+    ok(1);
+    exit;
 };
 
 my $model = RDF::Trine::Model->temporary_model;

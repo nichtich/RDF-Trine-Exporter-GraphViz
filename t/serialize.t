@@ -24,7 +24,7 @@ like $dot, qr/digraph/, "dot format";
 #$model = RDF::Trine::Model->new;
 #$model->add_statement(
 #    statement( blank('x1'), iri('u:ri'), variable('foo') )
-#);	
+#);
 #$dot = $g->serialize_model_to_string( $model );
 # $g = RDF::Trine::Exporter::GraphViz->new;
 #$g->to_file( 'test.svg', $model );
