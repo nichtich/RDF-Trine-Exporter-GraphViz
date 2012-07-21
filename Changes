@@ -1,5 +1,8 @@
 # Change file for RDF::Trine::Exporter::GraphViz
 
+0.14 2012-07-21
+    Added to_string
+
 0.13 2012-01-23
     Moved list of namespace prefixes to RDF::NS
 

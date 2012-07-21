@@ -4,31 +4,31 @@ RDF::Trine::Exporter::GraphViz - Serialize RDF graphs as dot graph diagrams
 
 # VERSION
 
-version 0.13
+version 0.14
 
 # SYNOPSIS
 
-  use RDF::Trine::Exporter::GraphViz;
+    use RDF::Trine::Exporter::GraphViz;
 
-  my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
-  my $dot = $ser->serialize_model_to_string( $model );
+    my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
+    my $dot = $ser->to_string( $rdf );
 
-  $ser->to_file( 'graph.svg', $model );
+    $ser->to_file( 'graph.svg', $rdf );
 
-  # highly configurable
-  my $g = RDF::Trine::Exporter::GraphViz->new(
-      namespaces => {
-          foaf => 'http://xmlns.com/foaf/0.1/'
-      },
-      alias => {
-          'http://www.w3.org/2002/07/owl#sameAs' => '=',
-      },
-      prevar => '$',  # variables as '$x' instead of '?x'
-      url    => 1,    # hyperlink all URIs
+    # highly configurable
+    my $g = RDF::Trine::Exporter::GraphViz->new(
+        namespaces => {
+            foaf => 'http://xmlns.com/foaf/0.1/'
+        },
+        alias => {
+            'http://www.w3.org/2002/07/owl#sameAs' => '=',
+        },
+        prevar => '$',  # variables as '$x' instead of '?x'
+        url    => 1,    # hyperlink all URIs
 
-      # see below for more configuration options
-  );
-  $g->to_file( 'test.svg', $model );
+        # see below for more configuration options
+    );
+    $g->to_file( 'test.svg', $model );
 
 # DESCRIPTION
 
@@ -47,7 +47,7 @@ are of interest in particular:
 
 ## new ( %options )
 
-Creates a new serializer with [CONFIGURATION](#pod_CONFIGURATION) options
+Creates a new serializer with [configuration](#CONFIGURATION) options
 as described below.
 
 ## media_types
@@ -66,14 +66,20 @@ Serialize RDF data, provided as [RDF::Trine::Iterator](http://search.cpan.org/pe
 [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) to a file. `$file` can be a filehandle or file name.
 The serialization format is automatically derived from known file extensions.
 
+## to_string( $rdf [ %options ] )
+
+Serialize RDF data, provided as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as
+[RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) to a string.
+
 ## serialize_model_to_file ( $file, $model [, %options ] )
 
-Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a file,
-where `$file` can be a filename or a filehandle.
+Provided as alias for `to_file` for compatibility with other
+`RDF::Trine::Exporter` classes.  
 
 ## serialize_model_to_string ( $model [, %options ] )
 
-Serialize a [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) as graph diagram to a string.
+Provided as alias for `to_string` for compatibility with other
+`RDF::Trine::Exporter` classes.  
 
 ## serialize_iterator_to_string ( $iterator [, %options ] )
 
@@ -81,7 +87,8 @@ Serialize a [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::It
 
 ## iterator_as_graphviz ( $iterator )
 
-This internal the core method, used by all `serialize_...` methods.
+Internal core method, used by `to_string` and `to_file`, which one should
+better call instead.
 
 # CONFIGURATION
 

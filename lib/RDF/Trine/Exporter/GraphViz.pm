@@ -64,38 +64,11 @@ sub media_types {
     return ($self->{mime});
 }
 
-# The following two methods may better be moved to RDF::Trine::Exporter.
-sub serialize_model_to_string {
-    my $self  = shift;
-    my $model = shift;
-    return $self->serialize_iterator_to_string( $model->as_stream, @_ );
-}
+sub to_string {
+    my ($self, $rdf, %options) = @_;
+	$rdf = $rdf->as_stream if $rdf->isa('RDF::Trine::Model');
 
-sub serialize_model_to_file {
-    my $self = shift;
-    my $file = shift;
-    if (defined $file and !ref $file) {
-        open (my $fh, '>', $file);
-        $file = $fh;
-    }
-    print {$file} $self->serialize_model_to_string( @_ );
-}
-
-sub to_file {
-    my $self = shift;
-    my $file = shift;
-    if (defined $file and !ref $file and
-        $file =~ /\.([^.]+)$/ and $FORMATS{$1} ) {
-        $self->serialize_model_to_file( $file, @_, as => $1 );
-    } else {
-        $self->serialize_model_to_file( $file, @_ );
-    }
-}
-
-sub serialize_iterator_to_string {
-    my ($self, $iter, %options) = @_;
-
-    my $g = $self->iterator_as_graphviz($iter, %options);
+    my $g = $self->iterator_as_graphviz($rdf, %options);
 
     my $format = ($options{as} || $self->{as});
     die "Unknown serialization format $format" unless $FORMATS{$format};
@@ -113,8 +86,33 @@ sub serialize_iterator_to_string {
     return $data;
 }
 
-# sub to_string
-# sub to_file (with guessing 'as' from filename)
+sub to_file {
+    my ($self, $file, $rdf, %options) = @_;
+
+    if (defined $file and !ref $file and
+        $file =~ /\.([^.]+)$/ and $FORMATS{$1} ) {
+		$options{as} = $1;
+    }
+
+    if (defined $file and !ref $file) {
+        open (my $fh, '>', $file);
+        $file = $fh;
+    }
+
+    print {$file} $self->to_string( %options );
+}
+
+sub serialize_model_to_string {
+	shift->to_string(@_);
+}
+
+sub serialize_model_to_file {
+	shift->to_string(@_);
+}
+
+sub serialize_iterator_to_string {
+	shift->to_string(@_);
+}
 
 sub as_graphviz {
    my ($self, $rdf, %options) = @_;
@@ -211,9 +209,9 @@ L<rdfdot> to create graph diagrams from RDF data.
   use RDF::Trine::Exporter::GraphViz;
 
   my $ser = RDF::Trine::Exporter::GraphViz->new( as => 'dot' );
-  my $dot = $ser->serialize_model_to_string( $model );
+  my $dot = $ser->to_string( $rdf );
 
-  $ser->to_file( 'graph.svg', $model );
+  $ser->to_file( 'graph.svg', $rdf );
 
   # highly configurable
   my $g = RDF::Trine::Exporter::GraphViz->new(
@@ -258,14 +256,20 @@ Serialize RDF data, provided as L<RDF::Trine::Iterator> or as
 L<RDF::Trine::Model> to a file. C<$file> can be a filehandle or file name.
 The serialization format is automatically derived from known file extensions.
 
+=head2 to_string( $rdf [ %options ] )
+
+Serialize RDF data, provided as L<RDF::Trine::Iterator> or as
+L<RDF::Trine::Model> to a string.
+
 =head2 serialize_model_to_file ( $file, $model [, %options ] )
 
-Serialize a L<RDF::Trine::Model> as graph diagram to a file,
-where C<$file> can be a filename or a filehandle.
+Provided as alias for C<to_file> for compatibility with other
+C<RDF::Trine::Exporter> classes.  
 
 =head2 serialize_model_to_string ( $model [, %options ] )
 
-Serialize a L<RDF::Trine::Model> as graph diagram to a string.
+Provided as alias for C<to_string> for compatibility with other
+C<RDF::Trine::Exporter> classes.  
 
 =head2 serialize_iterator_to_string ( $iterator [, %options ] )
 
@@ -273,7 +277,8 @@ Serialize a L<RDF::Trine::Iterator> as graph diagram to a string.
 
 =head2 iterator_as_graphviz ( $iterator )
 
-This internal the core method, used by all C<serialize_...> methods.
+Internal core method, used by C<to_string> and C<to_file>, which one should
+better call instead.
 
 =head1 CONFIGURATION
 
