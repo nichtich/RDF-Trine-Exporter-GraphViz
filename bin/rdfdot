@@ -51,8 +51,7 @@ if ($outfile ne '-') {
 }
 
 my $exporter = RDF::Trine::Exporter::GraphViz->new(
-    as => ($outformat || 'dot'),
-    namespaces => RDF::NS->new('any'),
+    as => ($outformat || 'dot')
 );
 
 my $model = RDF::Trine::Model->new;

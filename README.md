@@ -50,42 +50,42 @@ are of interest in particular:
 Creates a new serializer with [configuration](#CONFIGURATION) options
 as described below.
 
-## media_types
-
-Returns the exporter's mime type. For instance if you create an exporter with
-`as => 'svg'`, this method returns `('image/svg+xml')`.
-
-## as_graphviz ( $rdf [, %options ] )
-
-Creates and returns a [GraphViz](http://search.cpan.org/perldoc?GraphViz) object for further processing. You must
-provide RDF data as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model).
-
-## to_file ( $file, $rdf [, %options ] )
+## to\_file ( $file, $rdf \[, %options \] )
 
 Serialize RDF data, provided as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as
 [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) to a file. `$file` can be a filehandle or file name.
 The serialization format is automatically derived from known file extensions.
 
-## to_string( $rdf [ %options ] )
+## to\_string( $rdf \[ %options \] )
 
 Serialize RDF data, provided as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as
 [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model) to a string.
 
-## serialize_model_to_file ( $file, $model [, %options ] )
+## as\_graphviz ( $rdf \[, %options \] )
+
+Creates and returns a [GraphViz](http://search.cpan.org/perldoc?GraphViz) object for further processing. You must
+provide RDF data as [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) or as [RDF::Trine::Model](http://search.cpan.org/perldoc?RDF::Trine::Model).
+
+## media\_types
+
+Returns the exporter's mime type. For instance if you create an exporter with
+`as => 'svg'`, this method returns `('image/svg+xml')`.
+
+## serialize\_model\_to\_file ( $file, $model \[, %options \] )
 
 Provided as alias for `to_file` for compatibility with other
-`RDF::Trine::Exporter` classes.  
+`RDF::Trine::Exporter` classes.
 
-## serialize_model_to_string ( $model [, %options ] )
+## serialize\_model\_to\_string ( $model \[, %options \] )
 
 Provided as alias for `to_string` for compatibility with other
-`RDF::Trine::Exporter` classes.  
+`RDF::Trine::Exporter` classes.
 
-## serialize_iterator_to_string ( $iterator [, %options ] )
+## serialize\_iterator\_to\_string ( $iterator \[, %options \] )
 
 Serialize a [RDF::Trine::Iterator](http://search.cpan.org/perldoc?RDF::Trine::Iterator) as graph diagram to a string.
 
-## iterator_as_graphviz ( $iterator )
+## iterator\_as\_graphviz ( $iterator )
 
 Internal core method, used by `to_string` and `to_file`, which one should
 better call instead.
@@ -134,6 +134,12 @@ Hash reference with options to style literal nodes. Defaults to
 Hash reference with options to style blank nodes. Defaults to `{ label => '',
 shape => 'point', fillcolor => 'white', color => 'gray', width => '0.3' }`.
 
+- edge
+
+Code referece with a function that get passed a predicate and variable `$_`
+set to the predicate's URI. The function must return undef to skip the RDF
+statement or a hash reference with options to style the edge.
+
 - url
 
 Add clickable URLs to nodes You can either provide a boolean value or a code
@@ -161,6 +167,11 @@ An URI that is marked as 'root' node.
 - title
 
 Add a title to the graph.
+
+- namespaces
+
+Hash reference with mapping from prefixes to URI namespaces to abbreviate URIs.
+By default the prefix mapping from [RDF::NS](http://search.cpan.org/perldoc?RDF::NS) is used.
 
 # LIMITATIONS
 

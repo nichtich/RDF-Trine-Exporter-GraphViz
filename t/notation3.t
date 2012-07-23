@@ -5,8 +5,9 @@ use Test::More;
 use RDF::Trine::Exporter::GraphViz;
 
 eval { require RDF::TriN3; } or do {
-    diag("RDF::TrinN3 not found, skipping tests");
+    diag("RDF::TriN3 not found, skipping tests");
     ok(1);
+    done_testing;
     exit;
 };
 
