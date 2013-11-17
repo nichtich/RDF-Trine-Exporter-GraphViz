@@ -9,7 +9,7 @@ use RDF::Trine::Model;
 use RDF::Trine::Exporter::GraphViz;
 use RDF::NS;
 use Pod::Usage;
-use Getopt::Long;
+use Getopt::Long qw(:config passthrough);
 
 my $FORMATS = \%RDF::Trine::Exporter::GraphViz::FORMATS;
 
@@ -29,10 +29,11 @@ if ($outlist) {
     exit;
 }
 
-my $infile  = shift @ARGV || '-';
-my $outfile = shift @ARGV || '-';
-
+my ($infile, $outfile) = qw(- -);
 my ($in, $out) = (\*STDIN, \*STDOUT);
+
+$infile  = shift @ARGV if @ARGV and $ARGV[0] ne '--';
+$outfile = shift @ARGV if @ARGV and $ARGV[0] ne '--';
 
 if ( $informat ) {
     $parser = $RDF::Trine::Parser::file_extensions{ $informat };
@@ -73,7 +74,7 @@ from L<RDF::NS>.
 
 =head1 SYNOPSIS
 
-rdfdot [ <OPTIONS> ] [ [ <RDF> ] <GRAPH> ]
+rdfdot [ <OPTIONS> ] [ [ <RDF> ] <GRAPH> ] [ -- <DOTOPTS> ]
 
 Arguments:
 
@@ -81,6 +82,7 @@ Arguments:
              default is '-' for standard input.
     GRAPH    Graph output filename with known extension (.png, .svg etc.),
              default is '-' for standard output.
+    DOTOPTS  Additional options passed to dot.
 
 Options:
 

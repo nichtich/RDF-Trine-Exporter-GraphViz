@@ -26,7 +26,7 @@ our %FORMATS = (
     wbmp  => 'image/vnd.wap.wbmp',
     cmapx => 'text/html',
     imap  => 'application/x-httpd-imap',
-    'map' => 'application/x-httpd-imap',
+    map   => 'application/x-httpd-imap',
     vrml  => 'model/vrml',
     fig   => 'image/x-xfig',
     svg   => 'image/svg+xml',
@@ -44,7 +44,7 @@ sub new {
 
     $self->{mime} ||= $FORMATS{ $self->{as} };
 
-    $self->{style}    ||= { rankdir => 1, concentrate => 1 };
+    $self->{style}    ||= { rankdir => 'BT', concentrate => 1 };
     $self->{node}     ||= { shape => 'plaintext', color => 'gray' };
     $self->{resource} ||= { shape => 'box', style => 'rounded',
         fontcolor => 'blue' };
@@ -145,7 +145,7 @@ sub iterator_as_graphviz {
 
     $gopt{name} = $options{title} if defined $options{title};
 
-    my $get_edge = $options{edge};
+    my $get_edge = $options{edge} || $self->{edge};
 
     my $g = GraphViz->new( %gopt );
     my %nsprefix = reverse %{$options{namespaces}};
@@ -321,7 +321,7 @@ Mime type. By default automatically set based on C<as>.
 =item style
 
 General graph style options as hash reference. Defaults to
-C<< { rankdir => 1, concentrate => 1 } >>.
+C<< { rankdir => 'TB', concentrate => 1 } >>.
 
 =item node
 
@@ -390,5 +390,7 @@ This serializer does not support C<negotiate> on purpose. It may optionally be
 enabled in a future version. GraphViz may fail on large graphs, its error
 message is not catched yet.  Configuration in general is not fully covered by
 unit tests. Identifiers of blank nodes are not included.
+
+=encoding utf-8
 
 =cut

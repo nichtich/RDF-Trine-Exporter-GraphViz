@@ -1,5 +1,8 @@
 # Change file for RDF::Trine::Exporter::GraphViz
 
+0.141 2012-08-20
+	Fixed config parameter 'edge'
+
 0.14 2012-07-21
     New method to_string
     New configuration parameters: edge and alias (extended)
